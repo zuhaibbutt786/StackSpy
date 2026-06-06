@@ -1,1 +1,725 @@
-index
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>StackSpy — Website Tech Detective | Chrome Extension</title>
+    <meta name="description" content="StackSpy instantly detects frameworks, CMS, analytics, fonts, and technologies behind any website. Free Chrome extension by DeepVIDIA Pakistan.">
+    <meta name="keywords" content="tech detector, chrome extension, website analyzer, framework detector, stackspy, deepvidia">
+    <meta name="author" content="Zuhaib Hussain Butt">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://deepvidia.github.io/stackspy/">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="StackSpy — Website Tech Detective">
+    <meta property="og:description" content="Instantly detect frameworks, CMS, analytics, and tech stack of any website with one click.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://deepvidia.github.io/stackspy/">
+    <meta property="og:image" content="https://deepvidia.github.io/stackspy/og-image.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%236c63ff' rx='20'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-weight='bold'%3E🔬%3C/text%3E%3C/svg%3E">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #0a0a0f 100%);
+            color: #e8e8f0;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a26; }
+        ::-webkit-scrollbar-thumb { background: #6c63ff; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5a52e0; }
+
+        /* Typography */
+        h1, h2, h3 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        h1 { font-size: clamp(2.5rem, 5vw, 4rem); }
+        h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin-bottom: 1rem; }
+        h3 { font-size: 1.3rem; margin-bottom: 0.75rem; }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6c63ff 0%, #ff6584 50%, #43e97b 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header / Navigation */
+        .navbar {
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(16px);
+            background: rgba(10, 10, 15, 0.8);
+            border-bottom: 1px solid rgba(108, 99, 255, 0.2);
+            z-index: 1000;
+            padding: 16px 0;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6c63ff, #ff6584);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, #6c63ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #a0a0c0;
+            text-decoration: none;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #6c63ff;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c63ff, #5a52e0);
+            color: white;
+            box-shadow: 0 4px 14px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #6c63ff;
+            color: #6c63ff;
+        }
+
+        .btn-outline:hover {
+            background: rgba(108, 99, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0 60px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            margin-bottom: 20px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: #a0a0c0;
+            max-width: 700px;
+            margin: 0 auto 32px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Features Grid */
+        .section {
+            padding: 80px 0;
+            border-bottom: 1px solid rgba(108, 99, 255, 0.1);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .section-title h2 {
+            margin-bottom: 12px;
+        }
+
+        .section-title p {
+            color: #a0a0c0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: rgba(26, 26, 38, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(108, 99, 255, 0.2);
+            border-radius: 24px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #6c63ff;
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: #b0b0c8;
+            font-size: 0.95rem;
+        }
+
+        /* Tech Badges */
+        .tech-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .tech-badge {
+            background: rgba(108, 99, 255, 0.12);
+            border: 1px solid rgba(108, 99, 255, 0.3);
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tech-badge:hover {
+            background: rgba(108, 99, 255, 0.25);
+            transform: scale(1.02);
+        }
+
+        /* Privacy Policy Section */
+        .privacy-content {
+            background: rgba(18, 18, 26, 0.8);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(108, 99, 255, 0.15);
+        }
+
+        .privacy-content h3 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: #6c63ff;
+        }
+
+        .privacy-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .privacy-content p, .privacy-content li {
+            color: #c0c0d8;
+        }
+
+        .privacy-content ul {
+            padding-left: 24px;
+            margin: 16px 0;
+        }
+
+        .privacy-content li {
+            margin: 8px 0;
+        }
+
+        /* Contact Section */
+        .contact-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .contact-card {
+            background: rgba(26, 26, 38, 0.6);
+            border: 1px solid rgba(108, 99, 255, 0.2);
+            border-radius: 20px;
+            padding: 28px 36px;
+            text-align: center;
+            min-width: 220px;
+        }
+
+        .contact-card .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .contact-card .label {
+            font-size: 0.8rem;
+            color: #6c63ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .contact-card .value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .contact-card a {
+            color: #e8e8f0;
+            text-decoration: none;
+        }
+
+        .contact-card a:hover {
+            color: #6c63ff;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 40px 0;
+            text-align: center;
+            border-top: 1px solid rgba(108, 99, 255, 0.1);
+            color: #6b6b8a;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                text-align: center;
+            }
+            .section {
+                padding: 50px 0;
+            }
+            .privacy-content {
+                padding: 24px;
+            }
+            .contact-card {
+                padding: 20px 24px;
+            }
+        }
+
+        /* Install instructions */
+        .install-steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .step {
+            background: rgba(18, 18, 26, 0.8);
+            border-radius: 20px;
+            padding: 20px 24px;
+            text-align: center;
+            flex: 1;
+            min-width: 180px;
+            border: 1px solid rgba(108, 99, 255, 0.2);
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background: #6c63ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-weight: bold;
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container nav-container">
+        <div class="logo">
+            <div class="logo-icon">🔬</div>
+            <span class="logo-text">StackSpy</span>
+        </div>
+        <div class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#features">Features</a>
+            <a href="#privacy">Privacy</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </div>
+</nav>
+
+<main>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="animate">
+                <h1>🔬 <span class="gradient-text">StackSpy</span></h1>
+                <h1>Website Tech Detective</h1>
+                <p class="subtitle">Instantly detect frameworks, CMS, analytics, fonts, and the complete technology stack behind any website — with one click.</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary" id="chromeLink">
+                        📥 Add to Chrome — Free
+                    </a>
+                    <a href="#features" class="btn btn-outline">
+                        Learn More
+                    </a>
+                </div>
+                <div class="tech-cloud">
+                    <span class="tech-badge">React</span>
+                    <span class="tech-badge">Vue.js</span>
+                    <span class="tech-badge">Angular</span>
+                    <span class="tech-badge">WordPress</span>
+                    <span class="tech-badge">Shopify</span>
+                    <span class="tech-badge">Tailwind</span>
+                    <span class="tech-badge">Bootstrap</span>
+                    <span class="tech-badge">Node.js</span>
+                    <span class="tech-badge">Python/Django</span>
+                    <span class="tech-badge">Firebase</span>
+                    <span class="tech-badge">Google Analytics</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>✨ <span class="gradient-text">What StackSpy Detects</span></h2>
+                <p>100+ technologies recognized with version detection and confidence scoring</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚛️</div>
+                    <h3>Frontend Frameworks</h3>
+                    <p>React, Vue, Angular, Svelte, Next.js, Nuxt, Gatsby, jQuery, Alpine, HTMX, and 15+ more.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖥️</div>
+                    <h3>Backend & CMS</h3>
+                    <p>WordPress, Shopify, WooCommerce, Laravel, Django, Rails, ASP.NET, Express, PHP, and databases.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Analytics & SEO</h3>
+                    <p>Google Analytics, GTM, Facebook Pixel, Hotjar, Mixpanel, Yoast SEO, Structured Data, Open Graph.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔤</div>
+                    <h3>Font Detection</h3>
+                    <p>Google Fonts, Adobe Fonts, and custom self-hosted fonts with family names.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏱️</div>
+                    <h3>Performance Metrics</h3>
+                    <p>Page Load, TTFB, DOM Ready, Transfer Size, First Paint, and FCP.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">♿</div>
+                    <h3>Accessibility Score</h3>
+                    <p>ARIA labels, skip links, alt text, landmarks, focus visible, heading structure — scored out of 7.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Install -->
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="section-title">
+                <h2>🚀 <span class="gradient-text">Get Started in 3 Steps</span></h2>
+                <p>No registration. No data collection. Just instant tech insights.</p>
+            </div>
+            <div class="install-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <strong>Install Extension</strong>
+                    <p style="font-size: 0.85rem; margin-top: 8px;">Add StackSpy to Chrome from the Web Store</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <strong>Visit Any Website</strong>
+                    <p style="font-size: 0.85rem; margin-top: 8px;">Navigate to any page you want to analyze</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <strong>Click 🔬 Icon</strong>
+                    <p style="font-size: 0.85rem; margin-top: 8px;">See the complete technology stack instantly</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy Policy Section (Full) -->
+    <section id="privacy" class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>🔒 <span class="gradient-text">Privacy Policy</span></h2>
+                <p>Your privacy is our priority. StackSpy collects absolutely no data.</p>
+            </div>
+            <div class="privacy-content">
+                <h3>📌 No Data Collection</h3>
+                <p>StackSpy does NOT collect, store, transmit, or share any user data. All technology detection is performed entirely within your local browser instance. No information ever leaves your device.</p>
+
+                <h3>🔧 Local Processing Only</h3>
+                <p>Every scan runs locally on your machine. StackSpy makes zero external API calls, uses no third-party services, and transmits no data over the network except loading the extension files themselves from the Chrome Web Store.</p>
+
+                <h3>🎯 Permissions & Their Limited Use</h3>
+                <ul>
+                    <li><strong>activeTab</strong> — Access the current webpage ONLY when you click the extension icon. No background or cross-tab access.</li>
+                    <li><strong>scripting</strong> — Injects detection script into the page to read framework globals (window.React, window.Vue) and DOM attributes.</li>
+                    <li><strong>tabs</strong> — Reads current tab URL and title for display in the popup and exported reports.</li>
+                    <li><strong>storage</strong> — Reserved for future user preferences (theme, default export format). Currently NOT used.</li>
+                    <li><strong>&lt;all_urls&gt;</strong> — Required to make StackSpy work on ANY website you choose to analyze. The script runs ONLY after your click.</li>
+                </ul>
+
+                <h3>🚫 What We Don't Do</h3>
+                <ul>
+                    <li>No background monitoring or tracking</li>
+                    <li>No modification of webpage content</li>
+                    <li>No advertising or promotional content</li>
+                    <li>No user authentication or accounts</li>
+                    <li>No selling or transferring data to third parties</li>
+                    <li>No creditworthiness or lending assessments</li>
+                </ul>
+
+                <h3>📁 Export Reports</h3>
+                <p>When you export a report (JSON, Markdown, HTML, or text), the file is saved locally to your device. StackSpy never uploads or transmits these files anywhere.</p>
+
+                <h3>🔄 Changes to This Policy</h3>
+                <p>Any updates to this privacy policy will be reflected on this page and in the extension's Chrome Web Store listing.</p>
+
+                <h3>📅 Last Updated</h3>
+                <p>January 2026</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>📞 <span class="gradient-text">Contact & Support</span></h2>
+                <p>Get in touch with the developer for questions, feedback, or support.</p>
+            </div>
+            <div class="contact-info">
+                <div class="contact-card">
+                    <div class="icon">📧</div>
+                    <div class="label">Email</div>
+                    <div class="value">
+                        <a href="mailto:zuhaib@deepvidia.com">zuhaibbutt3@gmail.com</a>
+                    </div>
+                </div>
+                <div class="contact-card">
+                    <div class="icon">📞</div>
+                    <div class="label">WhatsApp / Phone</div>
+                    <div class="value">
+                        <a href="tel:+923167609216">+92 316 7609216</a>
+                    </div>
+                </div>
+                <div class="contact-card">
+                    <div class="icon">🏢</div>
+                    <div class="label">Company</div>
+                    <div class="value">DeepVIDIA</div>
+                    <div style="font-size: 0.8rem; color: #6b6b8a;">Pakistan</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 32px;">
+                <p style="color: #a0a0c0;">Developed by <strong>Zuhaib Hussain Butt</strong><br>Founder, DeepVIDIA — AI & Web Technology Solutions</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 DeepVIDIA Pakistan — StackSpy: Website Technology Detective</p>
+            <p style="margin-top: 8px;">🔬 Made with precision for developers, SEOs, and tech enthusiasts worldwide.</p>
+            <p style="margin-top: 12px;">
+                <a href="#home" style="color: #6c63ff; text-decoration: none;">Home</a> &nbsp;|&nbsp;
+                <a href="#features" style="color: #6c63ff; text-decoration: none;">Features</a> &nbsp;|&nbsp;
+                <a href="#privacy" style="color: #6c63ff; text-decoration: none;">Privacy</a> &nbsp;|&nbsp;
+                <a href="#contact" style="color: #6c63ff; text-decoration: none;">Contact</a>
+            </p>
+        </div>
+    </footer>
+</main>
+
+<script>
+    // Chrome Web Store link (replace with your actual extension URL after publishing)
+    // For now, it points to Chrome Web Store extensions page — update when published.
+    const chromeLink = document.getElementById('chromeLink');
+    
+    // IMPORTANT: Replace this URL with your actual Chrome Web Store extension URL
+    // Example: https://chrome.google.com/webstore/detail/stackspy/xxxxxxxxxxxx
+    const EXTENSION_URL = "https://chrome.google.com/webstore/detail/stackspy/xxxxxxxxxxxx";
+    
+    // If you don't have the extension published yet, you can temporarily point to a placeholder
+    // or use a direct CRX install guide. For production, replace with real store URL.
+    
+    chromeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Replace with your actual Chrome Web Store URL when published
+        // For now, alert the developer to update the link
+        alert('📦 StackSpy is pending Chrome Web Store review.\n\nOnce published, this link will take you directly to the installation page.\n\nFor early access or manual installation, contact: zuhaib@deepvidia.com');
+        // Uncomment below and replace with real URL after publication:
+        // window.open(EXTENSION_URL, '_blank');
+    });
+    
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // Add animation on scroll (simple intersection observer)
+    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.feature-card, .step, .contact-card').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        observer.observe(el);
+    });
+    
+    // Make visible by default for hero
+    document.querySelectorAll('.animate').forEach(el => {
+        el.style.opacity = '1';
+    });
+</script>
+
+<!-- 
+    ============================================
+    INSTRUCTIONS FOR GITHUB PAGES HOSTING:
+    ============================================
+    
+    1. Create a new repository on GitHub named: stackspy (or your-username.github.io/stackspy)
+    2. Save this file as index.html
+    3. Create a folder structure if needed: /stackspy/index.html
+    4. Go to repository Settings → Pages
+    5. Set source to "main branch" or "master"
+    6. Your site will be live at: https://[your-username].github.io/stackspy/
+    
+    For custom domain: Add CNAME file and configure DNS.
+    
+    ============================================
+    IMPORTANT NOTES:
+    ============================================
+    
+    - Replace the Chrome Web Store URL (EXTENSION_URL) after your extension is published.
+    - The email "zuhaibbutt3@gmail.com" is a placeholder — update with your real email.
+    - The phone number +92 316 7609216 is included as provided.
+    - For OG image (og-image.png), create a 1200x630 PNG and place in the same folder.
+    - This page is fully responsive and works on mobile devices.
+    
+    ============================================
+    PRIVACY POLICY COMPLIANCE:
+    ============================================
+    
+    Since StackSpy collects NO user data, this privacy policy page fulfills 
+    Chrome Web Store requirements. Add this URL to your extension's 
+    "Privacy Policy" field during submission.
+    
+    Privacy Policy URL: https:/zuhaibbutt786/.github.io/stackspy/#privacy
+-->
+</body>
+</html>
